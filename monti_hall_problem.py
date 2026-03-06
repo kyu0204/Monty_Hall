@@ -184,11 +184,26 @@ elif st.session_state.step in ['login', 'first_choice', 'switch_decision', 'resu
                 save_to_supabase(save_data)
                 st.session_state.saved = True
             
-            if st.button("다시 하기"):
-                # 게임 데이터 초기화
-                del st.session_state.saved
-                st.session_state.step = 'login'
-                st.rerun()
+            st.write("---") # 구분을 위한 선 추가
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                # 1. 현재 이름으로 바로 다시 시작 (이름 유지, 정답 위치만 새로 세팅)
+                if st.button(f"🔄 '{st.session_state.user_name}' 이름으로 다시하기", use_container_width=True):
+                    del st.session_state.saved
+                    st.session_state.game_data = {
+                        "winning_door": secrets.choice([0, 1, 2]), # 새로운 정답 문 생성
+                        "doors": [0, 1, 2]
+                    }
+                    st.session_state.step = 'first_choice' # 로그인 단계를 건너뛰고 바로 문 선택으로 이동
+                    st.rerun()
+            
+            with col2:
+                # 2. 처음부터 (다른 이름으로 로그인)
+                if st.button("👤 다른 이름으로 시작", use_container_width=True):
+                    del st.session_state.saved
+                    st.session_state.step = 'login'
+                    st.rerun()
 
 # 3. 통계 페이지
 elif st.session_state.step == 'stats':
