@@ -46,7 +46,10 @@ st.markdown("""
 
 # --- 데이터 처리 함수 ---
 def save_to_supabase(data):
-    supabase.table("monty_hall_results").insert(data).execute()
+    try:
+        supabase.table("monty_hall_results").insert(data).execute()
+    except Exception as e:
+        st.error(f"데이터베이스 저장 중 오류가 발생했습니다: {e}")
 
 def fetch_statistics():
     response = supabase.table("monty_hall_results").select("*").execute()
@@ -219,10 +222,17 @@ elif st.session_state.step == 'stats':
         switched_df = df[df['switched'] == True]
         stayed_df = df[df['switched'] == False]
         
-        c1, c2, c3 = st.columns(3)
+        # 💡 추가: 최초 선택이 실제 정답이었을 확률 계산
+        initial_win_count = len(df[df['initial_choice'] == df['winning_door']])
+        initial_win_rate = (initial_win_count / total * 100) if total > 0 else 0
+        
+        # 화면을 4칸으로 나누어 배치
+        c1, c2, c3, c4 = st.columns(4)
+        
         c1.metric("총 게임 횟수", f"{total}회")
-        c2.metric("변경 시 당첨 확률", f"{(switched_df['is_winner'].mean()*100):.1f}%" if not switched_df.empty else "0%")
-        c3.metric("유지 시 당첨 확률", f"{(stayed_df['is_winner'].mean()*100):.1f}%" if not stayed_df.empty else "0%")
+        c2.metric("최초 선택이 당첨일 확률", f"{initial_win_rate:.1f}%") # 새로 추가된 지표
+        c3.metric("실제로 변경 시 당첨률", f"{(switched_df['is_winner'].mean()*100):.1f}%" if not switched_df.empty else "0%")
+        c4.metric("실제로 유지 시 당첨률", f"{(stayed_df['is_winner'].mean()*100):.1f}%" if not stayed_df.empty else "0%")
         
         st.write("---")
         st.write("#### 🚪 각 문 별 확률")
