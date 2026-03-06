@@ -222,17 +222,27 @@ elif st.session_state.step == 'stats':
         switched_df = df[df['switched'] == True]
         stayed_df = df[df['switched'] == False]
         
+        switch_count = len(switched_df)
+        stay_count = len(stayed_df)
+
         # 💡 추가: 최초 선택이 실제 정답이었을 확률 계산
         initial_win_count = len(df[df['initial_choice'] == df['winning_door']])
         initial_win_rate = (initial_win_count / total * 100) if total > 0 else 0
+        
+        switch_win_rate = (switched_df['is_winner'].mean() * 100) if switch_count > 0 else 0
+        stay_win_rate = (stayed_df['is_winner'].mean() * 100) if stay_count > 0 else 0
         
         # 화면을 4칸으로 나누어 배치
         c1, c2, c3, c4 = st.columns(4)
         
         c1.metric("총 게임 횟수", f"{total}회")
-        c2.metric("최초 선택이 당첨일 확률", f"{initial_win_rate:.1f}%") # 새로 추가된 지표
+        c2.metric("최초 선택이 당첨이었던 확률", f"{initial_win_rate:.1f}%") # 새로 추가된 지표
+        # 💡 변경: delta 속성을 사용하여 당첨률 아래에 작은 회색 글씨로 시행 횟수 표시
+        # delta_color="off"를 주어 값이 오르내리는 빨간/초록색 화살표 효과를 없앱니다.
         c3.metric("실제로 변경 시 당첨률", f"{(switched_df['is_winner'].mean()*100):.1f}%" if not switched_df.empty else "0%")
+        c3.caption(f"({switch_count}회 시행)")
         c4.metric("실제로 유지 시 당첨률", f"{(stayed_df['is_winner'].mean()*100):.1f}%" if not stayed_df.empty else "0%")
+        c4.caption(f"({stay_count}회 시행)")
         
         st.write("---")
         st.write("#### 🚪 각 문 별 확률")
